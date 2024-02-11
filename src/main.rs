@@ -1,10 +1,10 @@
 
-
-
 use iced::alignment::Horizontal;
 use iced::futures::ready;
-use iced::{Theme, Element, Sandbox, Settings, gradient, Length, Alignment};
+use iced::widget::text_input::Id;
+use iced::{Theme, Element, Application, Settings, gradient, Length, Alignment, Padding, Command};
 use iced::widget::{text, button, column, row, text_input, horizontal_space, container, Row};
+
 fn main() -> iced::Result {
     Calculator::run(Settings::default())
 }
@@ -21,88 +21,92 @@ struct Calculator {
     temp_row: String,
     temp_col: String,
     err_msg: String,
-    menu: Menu,
+    action: Actions,
     rows: u8,
     cols: u8,
+    matrix: Vec<Vec<u8>>,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
     TempRow(String),
     TempCol(String),
-    HomeDown,
-    InverseDown,
-    MultiplyDown,
-    SysEqDown,
-}
-
-enum Menu {
-    Home,
+    SubmitRow,
     Inverse,
     Multiply,
     SysEq,
-}
-impl Menu {
-    fn to_home(&mut self) {
-        *self = Menu::Home
-    }
-    fn to_inverse(&mut self) {
-        *self = Menu::Home
-    }
-    fn to_multiply(&mut self) {
-        *self = Menu::Home
-    }
-    fn to_syseq(&mut self) {
-        *self = Menu::Home
-    }
+    Determinant,
 }
 
-impl Sandbox for Calculator {
+enum Actions {
+    Input,
+    Inverse,
+    Multiply,
+    SysEq,
+    Determinant,
+}
+
+impl Application for Calculator {
     type Message = Message;
+    type Executor = iced::executor::Default;
+    type Theme = Theme;
+    type Flags = ();
 
-    fn new() -> Self {
-        Self {
+    fn new(_flags: ()) -> (Self, Command<Message>) {
+        (Self {
             temp_row: String::new(),
             temp_col: String::new(),
-            menu: Menu::Home,
+            action: Actions::Input,
             rows: 0,
             cols: 0,
             err_msg: String::new(),
-        }
+            matrix: Vec::default(),
+        }, Command::none())
     }
 
     fn title(&self) -> String {
         "The Matrix Calculator".to_owned()
     }
 
-    fn update(&mut self, message: Self::Message) {
+    fn update(&mut self, message: Self::Message) -> iced::Command<Message> {
         match message {
-            Message::TempRow(row) => if row.is_numeric() {self.temp_row = row},
-            Message::TempCol(col) => if col.is_numeric() {self.temp_col = col},
-            Message::HomeDown => self.menu.to_home(),
-            Message::InverseDown => self.menu.to_inverse(),
-            Message::MultiplyDown => self.menu.to_multiply(),
-            Message::SysEqDown => self.menu.to_syseq(),
+            Message::TempRow(row) => { if row.is_numeric() {self.rows = row.parse().unwrap(); self.temp_row = row}; Command::none()},
+            Message::TempCol(col) => { if col.is_numeric() {self.cols = col.parse().unwrap(); self.temp_col = col}; Command::none()},
+            Message::SubmitRow => text_input::focus(Id::new("cols")),
+            Message::Inverse => Command::none(),
+            Message::Multiply => Command::none(),
+            Message::SysEq => Command::none(),
+            Message::Determinant => Command::none(),
 
         }
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message> {
-        let txt = "hello";
         let err = "";
+
         let get_size = row![
-            text_input("rows", &self.temp_row).on_input(Message::TempRow).width(Length::Fixed(50.)),
-            text(" x ").horizontal_alignment(Horizontal::Center),
-            text_input("cols", &self.temp_col).on_input(Message::TempCol).width(Length::Fixed(50.))
+            text_input("rows", &self.temp_row).on_input(Message::TempRow).width(Length::Fixed(50.)).on_submit(Message::SubmitRow),
+            text(" x "),
+            text_input("cols", &self.temp_col).on_input(Message::TempCol).width(Length::Fixed(50.)).id(Id::new("cols"))
         ];
-        container(column![
-            text("Please input the dimensions of the matrix").horizontal_alignment(Horizontal::Center),
-            get_size,
-            text("\nWhat do you want to do with this matrix?\n"), 
-            txt
-            ].padding(5)
-        ).width(Length::FillPortion(3)).center_x()
-        .into()
+
+        let size_container = container(get_size).center_x();
+
+        let functions = row![
+            button("Multiply").on_press(Message::Multiply),
+            button("Inverse").on_press(Message::Inverse),
+            button("Sys. of Equations").on_press(Message::SysEq),
+            button("Determinant").on_press(Message::Determinant)
+        ].spacing(10).padding(30);
+
+        let content = column![
+            text("What do you want to do?").size(30),
+            functions,
+            text("Please input the dimensions of the matrix"),
+            size_container.padding(20),
+            ].align_items(Alignment::Center);
+
+        container(content).width(Length::Fill).padding(40).center_x().into()
             
         
     }
@@ -110,4 +114,5 @@ impl Sandbox for Calculator {
     fn theme(&self) -> Theme {
         Theme::Dark
     }
+
 }
