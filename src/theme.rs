@@ -1,10 +1,9 @@
-use std::default;
 
 use iced::{
     application,
     executor::Default,
     theme::palette,
-    widget::{button, container, text, text_input},
+    widget::{button, container, text, text_input, rule},
     Application, BorderRadius, Color,
 };
 
@@ -102,12 +101,29 @@ impl text_input::StyleSheet for Theme {
     }
 }
 
+
+#[derive(Clone, Copy, Default)]
+pub enum Text {
+    /// The default style.
+    #[default]
+    Default,
+    /// Colored text.
+    Color(Color),
+}
+
+impl From<Color> for Text {
+    fn from(color: Color) -> Self {
+        Text::Color(color)
+    }
+}
+
 impl text::StyleSheet for Theme {
-    type Style = ();
+    type Style = Text;
 
     fn appearance(&self, style: Self::Style) -> text::Appearance {
-        text::Appearance {
-            ..text::Appearance::default()
+        match style {
+            Text::Default => text::Appearance::default(),
+            Text::Color(c) => text::Appearance { color: Some(c) },
         }
     }
 }
@@ -122,7 +138,7 @@ pub enum Button {
 
 impl button::StyleSheet for Theme {
     type Style = Button;
-    
+
     fn active(&self, style: &Self::Style) -> button::Appearance {
         let base = button::Appearance {
             background: Some(iced::Background::Color(Color::from_rgb8(100, 100, 200))),
@@ -135,10 +151,17 @@ impl button::StyleSheet for Theme {
 
         match style {
             Button::NotPressed => base,
-            Button::Pressed => button::Appearance{ background: Some(iced::Background::Color(Color::BLACK)), border_color: Color::WHITE, text_color: Color::WHITE, ..base},
-            Button::Red => button::Appearance{ text_color: Color::from_rgb(1., 0., 0.), ..base }
+            Button::Pressed => button::Appearance {
+                background: Some(iced::Background::Color(Color::BLACK)),
+                border_color: Color::WHITE,
+                text_color: Color::WHITE,
+                ..base
+            },
+            Button::Red => button::Appearance {
+                text_color: Color::from_rgb(1., 0., 0.),
+                ..base
+            },
         }
-
     }
 }
 
@@ -148,6 +171,20 @@ impl container::StyleSheet for Theme {
     fn appearance(&self, style: &Self::Style) -> container::Appearance {
         container::Appearance {
             ..container::Appearance::default()
+        }
+    }
+}
+
+impl rule::StyleSheet for Theme {
+    type Style = ();
+
+    fn appearance(&self, style: &Self::Style) -> rule::Appearance {
+        let palette = &palette::EXTENDED_DARK;
+        rule::Appearance {
+            color: palette.background.strong.color.into(),
+            width: 1,
+            radius: 0.0.into(),
+            fill_mode: rule::FillMode::Full,
         }
     }
 }
