@@ -3,7 +3,7 @@ use iced::Color;
 use logic::Operations;
 mod functionality;
 mod theme;
-use functionality::{MakeSizeInput, MatrixVisualizing, BasicCalcFunctionality};
+use functionality::{BasicCalcFunctionality, MakeSizeInput, MatrixVisualizing};
 use iced::alignment::Horizontal;
 use iced::futures::ready;
 use iced::widget;
@@ -13,7 +13,6 @@ use iced::widget::{
     button, column, container, horizontal_space, row, text, text_input, Column, Container, Row,
 };
 use iced::{gradient, Alignment, Application, Command, Element, Length, Padding, Settings, Theme};
-
 
 // TODO
 // add a clear button
@@ -44,7 +43,6 @@ pub struct Calculator {
     pub matrix: Vec<Vec<String>>,
     pub mult_matrix: Vec<Vec<String>>,
     output_matrix: Vec<Vec<f64>>,
-    error: String,
 }
 
 #[derive(Debug, Clone)]
@@ -92,7 +90,6 @@ impl Application for Calculator {
                 matrix: Vec::default(),
                 mult_matrix: Vec::default(),
                 output_matrix: Vec::default(),
-                error: String::new(),
             },
             Command::none(),
         )
@@ -103,7 +100,6 @@ impl Application for Calculator {
     }
 
     fn update(&mut self, message: Self::Message) -> iced::Command<Message> {
-        self.get_error();
         match message {
             Message::TempRow(row) => {
                 if row.is_numeric() {
@@ -118,7 +114,6 @@ impl Application for Calculator {
                     self.temp_col = col;
                     self.update_matrix_size(false);
                     self.output_matrix.clear();
-
                 };
                 Command::none()
             }
@@ -127,7 +122,6 @@ impl Application for Calculator {
                     self.mult_row = row;
                     self.update_matrix_size(true);
                     self.output_matrix.clear();
-
                 };
                 Command::none()
             }
@@ -136,7 +130,6 @@ impl Application for Calculator {
                     self.mult_col = col;
                     self.update_matrix_size(true);
                     self.output_matrix.clear();
-
                 };
                 Command::none()
             }
@@ -202,7 +195,7 @@ impl Application for Calculator {
                 Modes::Input => Command::none(),
                 Modes::Inverse => todo!(),
                 Modes::Multiply => {
-                    self.output_matrix = self.multiply();
+                    self.multiply();
                     Command::none()
                 }
                 Modes::SysEq => todo!(),
@@ -212,7 +205,7 @@ impl Application for Calculator {
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, iced::Renderer<theme::Theme>> {
-
+        let error = self.get_error();
         let button_styles;
         {
             use theme::Button::{NotPressed, Pressed};
@@ -246,7 +239,11 @@ impl Application for Calculator {
                 .on_press(Message::Clear)
                 .style(theme::Button::Red),
             horizontal_space(Length::Fixed(30.)),
-            button("Calculate").on_press(Message::Calculate)
+            if error == "" {
+                button("Calculate").on_press(Message::Calculate)
+            } else {
+                button("Calculate")
+            }
         );
 
         let content = column![
@@ -254,7 +251,7 @@ impl Application for Calculator {
             functions,
             text("Please input the dimensions of the matrix"),
             self.make_size_input().padding(20),
-            text(&self.error).style(theme::Text::Color(Color::from_rgb(1.,0.,0.))),
+            text(error).style(theme::Text::Color(Color::from_rgb(1., 0., 0.))),
             self.make_matrices(),
             util_buttons,
         ]

@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 iced = { version = "0.10.0", features = ["debug"] }
+rayon = "1.8.1"
 tokio = "1.36.0"

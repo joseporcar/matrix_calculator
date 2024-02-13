@@ -1,9 +1,8 @@
-
 use iced::{
     application,
     executor::Default,
     theme::palette,
-    widget::{button, container, text, text_input, rule},
+    widget::{button, container, rule, text, text_input},
     Application, BorderRadius, Color,
 };
 
@@ -100,7 +99,6 @@ impl text_input::StyleSheet for Theme {
         }
     }
 }
-
 
 #[derive(Clone, Copy, Default)]
 pub enum Text {
