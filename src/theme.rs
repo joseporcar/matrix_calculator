@@ -2,7 +2,7 @@ use iced::{
     application,
     executor::Default,
     theme::palette,
-    widget::{button, container, rule, text, text_input},
+    widget::{button, container, rule, scrollable, text, text_input},
     Application, BorderRadius, Color,
 };
 
@@ -186,3 +186,19 @@ impl rule::StyleSheet for Theme {
         }
     }
 }
+
+// impl scrollable::StyleSheet for Theme {
+//     type Style =;
+
+//     fn active(&self, style: &Self::Style) -> scrollable::Scrollbar {
+//         todo!()
+//     }
+
+//     fn hovered(
+//         &self,
+//         style: &Self::Style,
+//         is_mouse_over_scrollbar: bool,
+//     ) -> scrollable::Scrollbar {
+//         todo!()
+//     }
+// }

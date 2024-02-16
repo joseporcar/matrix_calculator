@@ -1,7 +1,6 @@
 use iced::{
     widget::{
-        container, horizontal_space, row, rule, text, text_input, text_input::Id, Column,
-        Container, Row,
+        container, horizontal_space, row, rule, scrollable, text, text_input::{Id}, Column, Container, Row, Scrollable, text_input
     },
     Length,
 };
@@ -37,8 +36,8 @@ impl MatrixVisualizing for Calculator {
             col = self.mult_col.parse().unwrap_or(0);
             matrix = &mut self.mult_matrix;
         } else {
-            row = self.temp_row.parse().unwrap_or(0);
-            col = self.temp_col.parse().unwrap_or(0);
+            row = self.row.parse().unwrap_or(0);
+            col = self.col.parse().unwrap_or(0);
             matrix = &mut self.matrix;
         }
 
@@ -145,12 +144,12 @@ pub trait MakeSizeInput {
 impl MakeSizeInput for Calculator {
     fn make_size_input(&self) -> Container<Message, iced::Renderer<theme::Theme>> {
         let get_size = row![
-            text_input("rows", &self.temp_row)
+            text_input("rows", &self.row)
                 .on_input(Message::TempRow)
                 .width(Length::Fixed(50.))
                 .on_submit(Message::SubmitRow),
             text(" x "),
-            text_input("cols", &self.temp_col)
+            text_input("cols", &self.col)
                 .on_input(Message::TempCol)
                 .width(Length::Fixed(50.))
                 .id(Id::new("cols"))
@@ -207,14 +206,14 @@ impl BasicCalcFunctionality for Calculator {
         match self.mode {
             Modes::Input => String::new(),
             Modes::Inverse => {
-                if self.temp_row != self.temp_col {
+                if self.row != self.col {
                     "You need a square matrix to find inverse".to_owned()
                 } else {
                     String::new()
                 }
             }
             Modes::Multiply => {
-                if self.temp_col != self.mult_row {
+                if self.col != self.mult_row {
                     "You need to have as many colums in the first matrix as rows in the second one"
                         .to_owned()
                 } else {
@@ -225,4 +224,9 @@ impl BasicCalcFunctionality for Calculator {
             Modes::Determinant => String::new(),
         }
     }
+}
+
+
+trait UpdateFunctionality {
+
 }

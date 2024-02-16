@@ -4,6 +4,7 @@ use logic::Operations;
 mod functionality;
 mod theme;
 use functionality::{BasicCalcFunctionality, MakeSizeInput, MatrixVisualizing};
+
 use iced::alignment::Horizontal;
 use iced::futures::ready;
 use iced::widget;
@@ -13,12 +14,15 @@ use iced::widget::{
     button, column, container, horizontal_space, row, text, text_input, Column, Container, Row,
 };
 use iced::{gradient, Alignment, Application, Command, Element, Length, Padding, Settings, Theme};
+use rayon::str::ParallelString;
 
+use std::env::args;
 // TODO
-// add a clear button
+// select the whole box when inputting
 
 fn main() -> iced::Result {
-    Calculator::run(Settings::default())
+    if args().len() > 1 {logic::big_tester(args().nth(1).unwrap().parse().unwrap(), args().nth(2).unwrap_or("4".to_owned()).parse().unwrap()); return iced::Result::Ok(())}
+    else {Calculator::run(Settings::default())}
 }
 
 trait Numeric {
@@ -35,8 +39,8 @@ impl Numeric for String {
 }
 
 pub struct Calculator {
-    temp_row: String,
-    temp_col: String,
+    row: String,
+    col: String,
     mult_row: String,
     mult_col: String,
     mode: Modes,
@@ -82,8 +86,8 @@ impl Application for Calculator {
     fn new(_flags: ()) -> (Self, Command<Message>) {
         (
             Self {
-                temp_row: String::new(),
-                temp_col: String::new(),
+                row: String::new(),
+                col: String::new(),
                 mult_row: String::new(),
                 mult_col: String::new(),
                 mode: Modes::Input,
@@ -103,7 +107,7 @@ impl Application for Calculator {
         match message {
             Message::TempRow(row) => {
                 if row.is_numeric() {
-                    self.temp_row = row;
+                    self.row = row;
                     self.update_matrix_size(false);
                     self.output_matrix.clear();
                 };
@@ -111,7 +115,7 @@ impl Application for Calculator {
             }
             Message::TempCol(col) => {
                 if col.is_numeric() {
-                    self.temp_col = col;
+                    self.col = col;
                     self.update_matrix_size(false);
                     self.output_matrix.clear();
                 };
@@ -148,8 +152,11 @@ impl Application for Calculator {
                 Command::none()
             }
             Message::SubmitEntry(row, col) => {
-                if col >= self.temp_col.parse::<usize>().unwrap() - 1 {
-                    if row >= self.temp_row.parse::<usize>().unwrap() - 1 {
+                if col >= self.col.parse::<usize>().unwrap() - 1 {
+                    if row >= self.row.parse::<usize>().unwrap() - 1 {
+                        if let Modes::Multiply = self.mode {
+                            return text_input::focus(Id::new("m0x0"));
+                        }
                         return Command::none();
                     } else {
                         return text_input::focus(Id::new(format!("{}x0", row + 1)));
@@ -159,7 +166,7 @@ impl Application for Calculator {
             }
             Message::SubmitMEntry(row, col) => {
                 if col >= self.mult_col.parse::<usize>().unwrap() - 1 {
-                    if row >= self.temp_row.parse::<usize>().unwrap() - 1 {
+                    if row >= self.mult_row.parse::<usize>().unwrap() - 1 {
                         return Command::none();
                     } else {
                         return text_input::focus(Id::new(format!("m{}x0", row + 1)));
@@ -185,7 +192,7 @@ impl Application for Calculator {
             }
             Message::Clear => {
                 self.matrix
-                    .fill(vec!["0".to_owned(); self.temp_col.parse().unwrap_or(0)]);
+                    .fill(vec!["0".to_owned(); self.col.parse().unwrap_or(0)]);
                 self.mult_matrix
                     .fill(vec!["0".to_owned(); self.mult_col.parse().unwrap_or(0)]);
                 self.output_matrix.clear();
